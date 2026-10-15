@@ -5,6 +5,7 @@ import {
   MapPin, PhoneCall,
 } from 'lucide-react'
 import api, { imageUrl } from '../api'
+import ImageWithFallback from '../components/ImageWithFallback'
 
 const placeholder = 'https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=1000&q=80'
 
@@ -82,19 +83,13 @@ export default function ProductDetail() {
 
             {/* Main image */}
             <div className="relative aspect-square w-full overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50 shadow-lg shadow-emerald-500/5">
-              {product.images?.[selectedImage] ? (
-                <img
-                  src={imageUrl(imgs[selectedImage])}
-                  alt={product.name}
-                  className="h-full w-full object-cover object-top"
-                />
-              ) : (
-                <img
-                  src={imgs[selectedImage]}
-                  alt={product.name}
-                  className="h-full w-full object-cover object-top"
-                />
-              )}
+              <ImageWithFallback
+                src={product.images?.[selectedImage] ? imageUrl(imgs[selectedImage]) : imgs[selectedImage]}
+                alt={product.name}
+                fallbackClassName="flex h-full w-full items-center justify-center bg-emerald-50 text-emerald-600"
+                FallbackIcon={PackageCheck}
+                className="h-full w-full object-cover object-top"
+              />
 
               {/* Category chip */}
               {product.category && (
@@ -117,10 +112,12 @@ export default function ProductDetail() {
                         : 'border-emerald-100 opacity-70 hover:border-emerald-300 hover:opacity-100'
                     }`}
                   >
-                    <img
+                    <ImageWithFallback
                       src={imageUrl(img)}
                       alt={`${product.name} ${index + 1}`}
                       className="h-full w-full object-cover object-top"
+                      fallbackClassName="flex h-full w-full items-center justify-center bg-emerald-50 text-emerald-600"
+                      FallbackIcon={PackageCheck}
                     />
                   </button>
                 ))}

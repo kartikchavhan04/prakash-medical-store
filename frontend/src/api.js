@@ -18,6 +18,8 @@ api.interceptors.request.use((config) => {
 export function imageUrl(path) {
   if (!path) return ''
   if (/^https?:\/\//i.test(path)) return path
+  if (path.startsWith('/images/')) return path
+  if (path.startsWith('images/')) return `/${path}`
   return `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
 }
 export default api

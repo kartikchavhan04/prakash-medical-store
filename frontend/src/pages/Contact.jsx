@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api, { imageUrl } from '../api'
+import ImageWithFallback from '../components/ImageWithFallback'
 
 export default function Contact() {
   const [staff, setStaff] = useState([])
@@ -224,11 +225,13 @@ export default function Contact() {
                   <div className="aspect-[16/10] w-full overflow-hidden bg-emerald-50">
                     {person.image
                       ? (
-                        <img
+                        <ImageWithFallback
                           src={imageUrl(person.image)}
                           alt={person.name}
                           loading="lazy"
                           className="h-full w-full object-cover object-top transition group-hover:scale-105"
+                          fallbackClassName="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600"
+                          FallbackIcon={UserRound}
                         />
                       )
                       : (

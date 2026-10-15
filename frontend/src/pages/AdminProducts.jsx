@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api, { imageUrl } from '../api'
+import ImageWithFallback from '../components/ImageWithFallback'
 
 const CATEGORIES = ['Tablets', 'Syrups', 'Capsules', 'Supplements', 'Ayurvedic', 'General Store', 'Surgical Items', 'Baby Care', 'Personal Care', 'First Aid']
 const emptyForm = { name: '', description: '', price: '', mrp: '', category: 'Tablets', stock: '0', prescription_required: false }
@@ -507,10 +508,12 @@ export default function AdminProducts() {
                       <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700">
                         {product.images?.[0]
                           ? (
-                            <img
+                            <ImageWithFallback
                               src={imageUrl(product.images[0])}
                               alt=""
                               className="h-full w-full object-cover object-top"
+                              fallbackClassName="flex h-full w-full items-center justify-center bg-emerald-50 text-emerald-700"
+                              FallbackIcon={Package}
                             />
                           )
                           : <Package size={24} />}
@@ -611,10 +614,12 @@ export default function AdminProducts() {
                             <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700">
                               {product.images?.[0]
                                 ? (
-                                  <img
+                                  <ImageWithFallback
                                     src={imageUrl(product.images[0])}
                                     alt=""
                                     className="h-full w-full object-cover object-top"
+                                    fallbackClassName="flex h-full w-full items-center justify-center bg-emerald-50 text-emerald-700"
+                                    FallbackIcon={Package}
                                   />
                                 )
                                 : <Package size={18} />}
@@ -873,7 +878,13 @@ export default function AdminProducts() {
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                         {existingImages.map((image, index) => (
                           <div key={`${image}-${index}`} className="relative overflow-hidden rounded-xl border border-emerald-100 bg-white">
-                            <img src={imageUrl(image)} alt={`Saved product image ${index + 1}`} className="h-28 w-full object-cover" />
+                            <ImageWithFallback
+                              src={imageUrl(image)}
+                              alt={`Saved product image ${index + 1}`}
+                              className="h-28 w-full object-cover"
+                              fallbackClassName="flex h-28 w-full items-center justify-center bg-emerald-50 text-emerald-700"
+                              FallbackIcon={Package}
+                            />
                             <button
                               type="button"
                               onClick={() => setExistingImages(current => current.filter((_, imageIndex) => imageIndex !== index))}

@@ -1,10 +1,12 @@
 from functools import wraps
 from datetime import datetime, timezone
-from pathlib import Path
 from uuid import uuid4
 
 import bcrypt
+import cloudinary
+import cloudinary.uploader
 from bson import ObjectId
+from cloudinary.exceptions import Error as CloudinaryError
 from flask import current_app, jsonify, request
 from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
 from werkzeug.utils import secure_filename
@@ -17,6 +19,12 @@ IMAGE_MIME_TYPES = {
     "webp": {"image/webp"},
     "gif": {"image/gif"},
 }
+
+
+class ImageStorageError(Exception):
+    def __init__(self, message, status_code=503):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def _has_valid_image_signature(content, extension):
@@ -88,9 +96,8 @@ def customer_required(fn):
     return wrapper
 
 
-def save_images(file_list, validate_content=False):
+def save_images(file_list, validate_content=False, cloudinary_folder="products"):
     validated = []
-    folder = Path(current_app.config["UPLOAD_FOLDER"])
     for file in file_list:
         if not file or not file.filename:
             continue
@@ -113,11 +120,49 @@ def save_images(file_list, validate_content=False):
                 raise ValueError(f"{original} is not a valid {extension.upper()} image.")
         validated.append((file, extension))
 
+    if not validated:
+        return []
+
+    cloudinary_settings = {
+        "cloud_name": current_app.config.get("CLOUDINARY_CLOUD_NAME"),
+        "api_key": current_app.config.get("CLOUDINARY_API_KEY"),
+        "api_secret": current_app.config.get("CLOUDINARY_API_SECRET"),
+        "secure": True,
+    }
+    if not all(cloudinary_settings.values()):
+        raise ImageStorageError(
+            "Cloud image storage is not configured. Set CLOUDINARY_CLOUD_NAME, "
+            "CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET."
+        )
+
+    cloudinary.config(**cloudinary_settings)
     saved = []
-    for file, extension in validated:
-        filename = f"{uuid4().hex}.{extension}"
-        file.save(folder / filename)
-        saved.append(f"/uploads/{filename}")
+    for file, _extension in validated:
+        try:
+            result = cloudinary.uploader.upload(
+                file,
+                folder=f"prakash-medical-store/{cloudinary_folder}",
+                public_id=uuid4().hex,
+                overwrite=False,
+                unique_filename=False,
+                resource_type="image",
+            )
+        except CloudinaryError as exc:
+            current_app.logger.error(
+                "Cloudinary image upload failed (%s).", type(exc).__name__
+            )
+            raise ImageStorageError(
+                "Image storage failed. Please try again.", status_code=502
+            ) from exc
+
+        secure_url = result.get("secure_url") if isinstance(result, dict) else None
+        if not isinstance(secure_url, str) or not secure_url.startswith("https://"):
+            current_app.logger.error("Cloudinary returned no HTTPS image URL.")
+            raise ImageStorageError(
+                "Image storage returned an invalid URL. Please try again.",
+                status_code=502,
+            )
+        saved.append(secure_url)
     return saved
 
 

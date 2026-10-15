@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api, { imageUrl } from '../api'
+import ImageWithFallback from '../components/ImageWithFallback'
 
 const emptyForm = { name: '', title: '', description: '', phone: '', email: '' }
 
@@ -194,10 +195,12 @@ export default function AdminStaff() {
                     <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700 sm:h-16 sm:w-16">
                       {item.image
                         ? (
-                          <img
+                          <ImageWithFallback
                             src={imageUrl(item.image)}
                             alt={item.name}
                             className="h-full w-full object-cover object-top"
+                            fallbackClassName="flex h-full w-full items-center justify-center bg-emerald-50 text-emerald-700"
+                            FallbackIcon={Users}
                           />
                         )
                         : <Users size={26} />}

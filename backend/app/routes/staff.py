@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from flask import Blueprint, current_app, jsonify, request
 
-from .common import admin_required, save_images, serialize_doc, valid_object_id
+from .common import ImageStorageError, admin_required, save_images, serialize_doc, valid_object_id
 
 staff_bp = Blueprint("staff", __name__)
 
@@ -38,9 +38,15 @@ def create_staff():
     if error:
         return jsonify({"message": error}), 400
     try:
-        images = save_images([request.files.get("image")])
+        images = save_images(
+            [request.files.get("image")],
+            validate_content=True,
+            cloudinary_folder="staff",
+        )
     except ValueError as exc:
         return jsonify({"message": str(exc)}), 400
+    except ImageStorageError as exc:
+        return jsonify({"message": str(exc)}), exc.status_code
     if images:
         data["image"] = images[0]
     data["created_at"] = datetime.now(timezone.utc)
@@ -60,9 +66,15 @@ def update_staff(staff_id):
     if error:
         return jsonify({"message": error}), 400
     try:
-        images = save_images([request.files.get("image")])
+        images = save_images(
+            [request.files.get("image")],
+            validate_content=True,
+            cloudinary_folder="staff",
+        )
     except ValueError as exc:
         return jsonify({"message": str(exc)}), 400
+    except ImageStorageError as exc:
+        return jsonify({"message": str(exc)}), exc.status_code
     if images:
         data["image"] = images[0]
     current_app.db.staff.update_one({"_id": ObjectId(staff_id)}, {"$set": data})

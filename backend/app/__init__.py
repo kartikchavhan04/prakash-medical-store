@@ -36,6 +36,9 @@ def create_app(test_config=None):
         PUBLIC_API_URL=os.getenv("PUBLIC_API_URL", "http://localhost:5000").rstrip("/"),
         FRONTEND_URL=os.getenv("FRONTEND_URL", ""),
         MAX_CONTENT_LENGTH=int(os.getenv("MAX_CONTENT_LENGTH_MB", "8")) * 1024 * 1024,
+        CLOUDINARY_CLOUD_NAME=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
+        CLOUDINARY_API_KEY=os.getenv("CLOUDINARY_API_KEY", ""),
+        CLOUDINARY_API_SECRET=os.getenv("CLOUDINARY_API_SECRET", ""),
         DEBUG=os.getenv("FLASK_ENV", "development") == "development",
     )
     if test_config:

@@ -4,7 +4,7 @@ import re
 from bson import ObjectId
 from flask import Blueprint, current_app, jsonify, request
 
-from .common import admin_required, public_product, save_images, serialize_doc, valid_object_id
+from .common import ImageStorageError, admin_required, public_product, save_images, serialize_doc, valid_object_id
 
 products_bp = Blueprint("products", __name__)
 CATEGORIES = ["Tablets", "Syrups", "Capsules", "Supplements", "Ayurvedic", "General Store", "Surgical Items", "Baby Care", "Personal Care", "First Aid"]
@@ -60,9 +60,15 @@ def create_product():
     if error:
         return jsonify({"message": error}), 400
     try:
-        images = save_images(request.files.getlist("images"), validate_content=True)
+        images = save_images(
+            request.files.getlist("images"),
+            validate_content=True,
+            cloudinary_folder="products",
+        )
     except ValueError as exc:
         return jsonify({"message": str(exc)}), 400
+    except ImageStorageError as exc:
+        return jsonify({"message": str(exc)}), exc.status_code
     data["images"] = images
     data["created_at"] = datetime.now(timezone.utc)
     data["updated_at"] = data["created_at"]
@@ -89,9 +95,15 @@ def update_product(product_id):
         if any(image not in existing_images for image in retained_images):
             return jsonify({"message": "One or more selected existing images are invalid."}), 400
     try:
-        new_images = save_images(request.files.getlist("images"), validate_content=True)
+        new_images = save_images(
+            request.files.getlist("images"),
+            validate_content=True,
+            cloudinary_folder="products",
+        )
     except ValueError as exc:
         return jsonify({"message": str(exc)}), 400
+    except ImageStorageError as exc:
+        return jsonify({"message": str(exc)}), exc.status_code
     if retained_images is not None:
         data["images"] = retained_images + new_images
     else:

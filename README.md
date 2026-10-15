@@ -7,8 +7,8 @@ A responsive product-catalogue website and store-admin dashboard built to match 
 - **Frontend:** React, Vite, Tailwind CSS, custom responsive CSS, React Router
 - **Backend:** Python Flask REST API, JWT access tokens, bcrypt password hashing
 - **Database:** MongoDB / MongoDB Atlas
-- **Images:** backend `uploads/` directory (local filesystem)
-- **Hosting plan:** Vercel (frontend) + Render (API) + MongoDB Atlas (database)
+- **Images:** Cloudinary in production; backend `app/uploads/` for existing local images
+- **Hosting:** Render Static Site (frontend) + Render Web Service (API) + MongoDB Atlas
 
 ## Included features
 
@@ -67,12 +67,17 @@ FRONTEND_URL=http://localhost:5173,http://127.0.0.1:5173,http://192.168.21.5:517
 PUBLIC_API_URL=http://localhost:5000
 UPLOAD_FOLDER=app/uploads
 MAX_CONTENT_LENGTH_MB=8
+CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 ADMIN_NAME=Prakash Medical Admin
 ADMIN_EMAIL=your-admin-email@example.com
 ADMIN_PASSWORD=choose-a-long-unique-password
 ```
 
 Use the actual connection string from your MongoDB Atlas project (or a local MongoDB URI). URL-encode any special characters in an Atlas database password. Never commit `.env` or share the admin password.
+
+Create a Cloudinary account and copy its cloud name, API key and API secret into these three backend-only variables in `backend/.env`. Never add Cloudinary credentials to the frontend or commit the populated `.env`. New product and staff images are uploaded to the separate Cloudinary folders `prakash-medical-store/products` and `prakash-medical-store/staff`. The Flask API stores and returns Cloudinary HTTPS URLs in the existing `images` and `image` fields.
 
 Create the single administrator account:
 
@@ -144,18 +149,35 @@ For local development, leave `VITE_API_URL` empty: the frontend uses the current
 3. Build command: `pip install -r requirements.txt`
 4. Start command: `gunicorn run:app`
 5. Add environment variables from `backend/.env.example`, including `MONGO_URI`, `MONGO_DB_NAME`, `SECRET_KEY`, `JWT_SECRET_KEY`, `FRONTEND_URL` and `PUBLIC_API_URL`.
-6. Set `PUBLIC_API_URL` to the public Render API URL and `FRONTEND_URL` to the public Vercel URL.
+6. Set `PUBLIC_API_URL` to the public Render API URL and `FRONTEND_URL` to the public Render Static Site URL (for this deployment: `https://prakash-medical-store.onrender.com`).
 7. Run `python seed_admin.py` once using the same environment to create the admin account. Do not put credentials in frontend environment variables.
 
-### Vercel (frontend)
-1. Import the repository into Vercel.
-2. Set **Root Directory** to `frontend`.
-3. Set environment variable `VITE_API_URL` to the public Render API base URL, without `/api` at the end (for example `https://your-api.onrender.com`).
-4. Deploy the Vite application. `vercel.json` contains an SPA rewrite so product details and admin routes load when refreshed.
+### Render Static Site (frontend)
+1. Create a Static Site connected to this repository.
+2. Set **Root Directory** to `frontend`, build command to `npm install && npm run build`, and publish directory to `dist`.
+3. Set `VITE_API_URL` to the public Render API origin without `/api` (for this deployment: `https://prakash-medical-api.onrender.com`).
+4. Deploy the static site. Configure an SPA rewrite to serve `index.html` for frontend routes.
 
-### Important note about uploaded images on free hosting
+### Cloudinary (persistent product and staff images)
+1. In the Render backend Web Service, open **Environment** and set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` from the Cloudinary dashboard. Keep these values only in the backend service; do not use `VITE_` variables for credentials.
+2. Redeploy/restart the backend after adding the variables. If any are absent, image uploads fail with a clear service error rather than silently saving a local-only URL.
 
-This project stores images in `backend/app/uploads/`, as specified in the requirements. Many free web-service filesystems are ephemeral, which means uploaded images can disappear on restart/redeploy, and the uploads folder is not automatically shared between multiple API instances. To keep uploads permanently in production, attach persistent storage where supported or change the upload adapter to durable object storage. This limitation does not affect local development.
+### Migrate existing local uploads (optional)
+Older MongoDB records may still refer to `/uploads/<filename>`. The source images that exist in this checkout are under `backend/app/uploads/` (the configured local upload directory). Preview which records point to available or missing files with a dry run from `backend`:
+
+```powershell
+python scripts\migrate_uploads_to_cloudinary.py
+```
+
+After confirming the dry-run report and configuring the backend `.env` with MongoDB and Cloudinary credentials, explicitly upload and update only the matching image URL fields with:
+
+```powershell
+python scripts\migrate_uploads_to_cloudinary.py --apply
+```
+
+The script preserves all other product/staff fields and never deletes local or Cloudinary files. It reports database references whose source file is unavailable; those images must be uploaded again by an administrator. Run it against the intended Atlas database only.
+
+The legacy `/uploads/<filename>` route remains available for local files, but new production uploads use Cloudinary so they persist across Render restarts and redeploys.
 
 ## 6. Security and operations notes
 

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, PackageCheck, AlertCircle, Phone, X } from 'lucide-react'
 import { imageUrl } from '../api'
+import ImageWithFallback from './ImageWithFallback'
 
 const placeholder = 'https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=700&q=80'
 
@@ -27,21 +28,14 @@ export default function ProductCard({ product }) {
         to={`/products/${product.id}`}
         className="relative block aspect-square w-full overflow-hidden bg-emerald-50"
       >
-        {product.images?.[0] ? (
-          <img
-            src={imageUrl(product.images[0])}
-            alt={product.name}
-            loading="lazy"
-            className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <img
-            src={placeholder}
-            alt="Medical supplies"
-            loading="lazy"
-            className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
-          />
-        )}
+        <ImageWithFallback
+          src={product.images?.[0] ? imageUrl(product.images[0]) : placeholder}
+          alt={product.name || 'Medical supplies'}
+          loading="lazy"
+          FallbackIcon={PackageCheck}
+          fallbackClassName="flex h-full w-full items-center justify-center bg-emerald-50 text-emerald-600"
+          className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
+        />
 
         {/* Category chip */}
         {product.category && (
