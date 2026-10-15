@@ -1,21 +1,15 @@
-In my existing Prakash Medical and General Store project,
-create a sitemap.xml for the Render production website.
-
-Production frontend URL:
-https://prakash-medical-store.onrender.com
-
-Instructions:
-1. Inspect the existing React Router configuration first.
-2. Identify the actual public routes from the code.
-3. Create frontend/public/sitemap.xml.
-4. Include the homepage and existing public pages only.
-5. Do not include admin, login, API, or protected routes.
-6. Use absolute HTTPS URLs with the production domain.
-7. Use valid XML sitemap format supported by Google.
-8. Do not invent routes or product URLs.
-9. Do not change existing functionality or styling.
-10. Verify that the sitemap is included at the root of the
-    production build output.
-
-Show me the final sitemap.xml contents and the files changed.
-Do not commit or push anything automatically.
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://prakash-medical-store.onrender.com/home</loc>
+  </url>
+  <url>
+    <loc>https://prakash-medical-store.onrender.com/products</loc>
+  </url>
+  <url>
+    <loc>https://prakash-medical-store.onrender.com/about</loc>
+  </url>
+  <url>
+    <loc>https://prakash-medical-store.onrender.com/contact</loc>
+  </url>
+</urlset>
