@@ -125,10 +125,10 @@ export default function Contact() {
                     Call us
                   </small>
                   <b className="mt-0.5 block break-words text-sm font-bold text-emerald-950 sm:text-base">
-                    9322736544
+                    9765428720
                   </b>
                   <a
-                    href="tel:+919322736544"
+                    href="tel:+919765428720"
                     className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-emerald-700 transition hover:gap-2 hover:text-emerald-500 sm:text-sm"
                   >
                     Tap to call <ArrowUpRight size={13} />
