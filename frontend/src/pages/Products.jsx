@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import api from '../api'
 import ProductCard from '../components/ProductCard'
+import { fetchProducts } from '../productsRequest'
 
 export default function Products() {
   const [params, setParams] = useSearchParams()
@@ -17,22 +18,41 @@ export default function Products() {
   ])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
-    setLoading(true); setError('')
-    api.get('/products', {
-      params: {
-        search: params.get('search') || '',
-        category: params.get('category') || 'All',
-      },
-    })
-      .then(({ data }) => {
-        setProducts(data.products || [])
+    const controller = new AbortController()
+    setLoading(true)
+    setError('')
+
+    Promise.resolve()
+      .then(() => {
+        if (controller.signal.aborted) return null
+        return fetchProducts(api, {
+          search: params.get('search') || '',
+          category: params.get('category') || 'All',
+        }, controller.signal)
+      })
+      .then(response => {
+        if (controller.signal.aborted) return
+        const data = response?.data
+        if (!Array.isArray(data?.products)) {
+          throw new Error('The products response did not contain a product list.')
+        }
+        setProducts(data.products)
         if (data.categories?.length) setCategories(data.categories)
       })
-      .catch(() => setError('We could not load products right now. Please try again in a moment.'))
-      .finally(() => setLoading(false))
-  }, [params])
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setError('We could not load products right now. Please try again in a moment.')
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [params, retryCount])
 
   const submitSearch = (event) => {
     event.preventDefault()
@@ -152,11 +172,13 @@ export default function Products() {
 
         {/* ---------- RESULT ROW ---------- */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 px-1">
-          <span className="text-sm text-slate-600 sm:text-base">
-            {loading
-              ? 'Loading catalogue…'
-              : `${products.length} ${products.length === 1 ? 'product' : 'products'} found`}
-          </span>
+          {!error && (
+            <span className="text-sm text-slate-600 sm:text-base">
+              {loading
+                ? 'Loading catalogue…'
+                : `${products.length} ${products.length === 1 ? 'product' : 'products'} found`}
+            </span>
+          )}
           {(params.get('search') || params.get('category')) && (
             <button
               onClick={clear}
@@ -189,7 +211,7 @@ export default function Products() {
               {error}
             </p>
             <button
-              onClick={() => setParams({})}
+              onClick={() => setRetryCount(count => count + 1)}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:-translate-y-0.5 hover:shadow-xl sm:text-base"
             >
               Try again
