@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './auth'
 import Navbar from './components/Navbar'
@@ -24,7 +24,7 @@ function PublicLayout() { return <><Navbar/><Outlet/><Footer/></> }
 export default function App() {
   return <AuthProvider><BrowserRouter><Toaster position="top-right" toastOptions={{ duration: 3500, style: { borderRadius: '14px', fontFamily: 'DM Sans, sans-serif' } }}/><Routes>
     <Route element={<PublicLayout/>}>
-      <Route path="/" element={<Navigate to="/products" replace />}/>
+      <Route path="/" element={<Home/>}/>
       <Route path="/home" element={<Home/>}/>
       <Route path="/products" element={<Products/>}/>
       <Route path="/products/:id" element={<ProductDetail/>}/>
