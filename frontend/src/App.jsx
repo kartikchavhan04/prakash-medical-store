@@ -20,7 +20,18 @@ import AdminStaff from './pages/AdminStaff'
 import AdminMessages from './pages/AdminMessages'
 import NotFound from './pages/NotFound'
 
-function PublicLayout() { return <><Navbar/><Outlet/><Footer/></> }
+function PublicLayout() {
+  return (
+    <div className="app-shell">
+      <Navbar />
+      <main className="page-main">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  )
+}
+
 export default function App() {
   return <AuthProvider><BrowserRouter><Toaster position="top-right" toastOptions={{ duration: 3500, style: { borderRadius: '14px', fontFamily: 'DM Sans, sans-serif' } }}/><Routes>
     <Route element={<PublicLayout/>}>
