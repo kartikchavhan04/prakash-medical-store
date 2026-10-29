@@ -6,6 +6,7 @@ import {
 import toast from 'react-hot-toast'
 import api, { imageUrl } from '../api'
 import ImageWithFallback from '../components/ImageWithFallback'
+import StoreQrCode from '../components/StoreQrCode'
 
 export default function Contact() {
   const [staff, setStaff] = useState([])
@@ -198,6 +199,9 @@ export default function Contact() {
           </div>
         </div>
       </section>
+      {/* ================= STORE QR CODE ================= */}
+      <StoreQrCode />
+
 
       {/* ================= STAFF SECTION ================= */}
       {staff.length > 0 && (
